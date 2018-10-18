@@ -21,9 +21,10 @@ function writeCSV(d::Dict, c1::String, c2::String, filename::String)
 end
 
 function exec()
-    # Make API request for repos
     token = ENV["GITHUB_AUTH"]
     auth = GitHub.authenticate(token)
+
+    # TODO: allow configuration
     repos = GitHub.repos(
         "ubclaunchpad", true,
         auth=auth,
@@ -44,6 +45,7 @@ function exec()
         Printf.@printf(">> (%i/%i) Processing %s | ", i, length(repos), cur.full_name)
 
         # language
+        # TODO: use language API for *all* langauges
         if cur.language != nothing
             incrementDict(languages, cur.language, 1)
         end
@@ -88,7 +90,7 @@ function exec()
     println("Data curated")
     println("Stars: " * string(stars))
 
-    # dataframes for CSVs
+    # dataframes for CSVs - TODO: allow configuration
     println("Generating CSVs")
     writeCSV(languages, "language", "count", "languages.csv")
     writeCSV(contributors, "name", "repositories", "contributors.csv")
