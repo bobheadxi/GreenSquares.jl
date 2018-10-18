@@ -3,6 +3,7 @@ import CSV
 import DataFrames
 import JSON
 import Dates
+import Printf
 
 function incrementDict(dict::Dict{String, Int}, key::String, count::Int)
     if !haskey(dict, key)
@@ -12,9 +13,11 @@ function incrementDict(dict::Dict{String, Int}, key::String, count::Int)
     end
 end
 
-function writeCSV(d::Dict, filename::String)
-    df = DataFrame(; [symbol(k)=>v for (k,v) in d]...)
-    CSV.write(df, filename)
+function writeCSV(d::Dict, c1::String, c2::String, filename::String)
+    df = DataFrames.DataFrame()
+    df[Symbol(c1)] = [k for (k,v) in d]
+    df[Symbol(c2)] = [v for (k,v) in d]
+    CSV.write(filename, df)
 end
 
 function exec()
@@ -29,8 +32,8 @@ function exec()
 
     # stats
     languages = Dict{String,Int}()
-    contributors = Dict{String, Int}()
-    contributions = Dict{String, Int}()
+    contributors = Dict{String,Int}()
+    contributions = Dict{String,Int}()
     commits = Dict{String,Int}()
     prs = Dict{String,Int}()
     stars = 0
@@ -38,20 +41,22 @@ function exec()
     # gather data - TODO: pagination
     for i = 1:length(repos)
         cur = repos[i]
-        print("Processing " * cur.full_name * " | ")
+        Printf.@printf(">> (%i/%i) Processing %s | ", i, length(repos), cur.full_name)
 
         # language
-        incrementDict(languages, cur.language, 1)
+        if cur.language != nothing
+            incrementDict(languages, cur.language, 1)
+        end
 
         # stars
-        print(string(cur.stargazers_count) * " stars | ")
+        Printf.@printf("%i stars | ", cur.stargazers_count)
         if cur.stargazers_count != nothing
             stars += cur.stargazers_count
         end
 
         # contributors
         c = GitHub.contributors(cur.full_name, auth=auth)[1]
-        print(string(length(c)) * " contributors | ")
+        Printf.@printf("%i contributors | ", length(c))
         for j = 1:length(c)
             incrementDict(contributors, c[j]["contributor"].login, 1)
             incrementDict(contributions, c[j]["contributor"].login, c[j]["contributions"])
@@ -71,7 +76,7 @@ function exec()
         # pull requests
         p = GitHub.pull_requests(cur.full_name, auth=auth,
             params=Dict{String,String}("state" => "all"))[1]
-        print(string(length(p)) * " pull requests | ")
+        Printf.@printf("%s pull requests | ", length(p))
         for j = 1:length(p)
             created = p[j].created_at
             incrementDict(prs, Dates.format(created, "yyyy-mm"), 1)
@@ -85,11 +90,11 @@ function exec()
 
     # dataframes for CSVs
     println("Generating CSVs")
-    writeCSV(languages, "languages.csv")
-    writeCSV(contributors, "contributors.csv")
-    writeCSV(contributions, "contributions.csv")
-    writeCSV(commits, "commits.csv")
-    writeCSV(prs, "pullrequests.csv")
+    writeCSV(languages, "language", "count", "languages.csv")
+    writeCSV(contributors, "name", "repositories", "contributors.csv")
+    writeCSV(contributions, "name", "contributions", "contributions.csv")
+    writeCSV(commits, "month", "commits", "commits.csv")
+    writeCSV(prs, "month", "pull requests", "pullrequests.csv")
 end
 
 # let's go!
