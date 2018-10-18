@@ -1,0 +1,11 @@
+name = "GreenSquares.jl"
+uuid = "ea39a56c-d278-11e8-0361-1d802fbd4fa8"
+authors = ["Robert Lin <robertlin1@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+GitHub = "bc5e4493-9b4d-5f90-b8aa-2b2bcaad7a26"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
